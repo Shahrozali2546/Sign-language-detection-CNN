@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ASL Recognition AI</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #6366f1;
+            --secondary: #4f46e5;
+            --bg: #0f172a;
+            --card: rgba(255, 255, 255, 0.05);
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
+            color: white;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+        }
+
+        .main-container {
+            width: 90%;
+            max-width: 1000px;
+            background: var(--card);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 24px;
+            padding: 40px;
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+
+        .header { text-align: center; }
+
+        .header h1 {
+            margin: 0;
+            font-size: 2.5rem;
+            background: linear-gradient(to right, #818cf8, #c084fc);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .content-grid {
+            display: grid;
+            grid-template-columns: 1.2fr 0.8fr;
+            gap: 30px;
+        }
+
+        @media (max-width: 768px) {
+            .content-grid { grid-template-columns: 1fr; }
+        }
+
+        .preview-area {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 16px;
+            height: 350px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px dashed rgba(255, 255, 255, 0.2);
+            overflow: hidden;
+            position: relative;
+        }
+
+        #imagePreview {
+            max-width: 100%;
+            max-height: 100%;
+            display: none;
+            object-fit: contain;
+        }
+
+        .placeholder-text {
+            color: #94a3b8;
+            text-align: center;
+        }
+
+        .controls {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            gap: 20px;
+        }
+
+        .btn-upload {
+            background: var(--primary);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 12px;
+            cursor: pointer;
+            text-align: center;
+            font-weight: 600;
+            transition: 0.3s;
+        }
+
+        .btn-upload:hover { background: var(--secondary); transform: translateY(-2px); }
+
+        input[type="file"] { display: none; }
+
+        .btn-predict {
+            background: #10b981;
+            border: none;
+            color: white;
+            padding: 15px;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .btn-predict:hover { background: #059669; }
+
+        .result-card {
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 16px;
+            padding: 30px;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 180px;
+        }
+
+        .pred-label { 
+            font-size: 0.9rem; 
+            color: #94a3b8; 
+            text-transform: uppercase; 
+            letter-spacing: 1px;
+        }
+
+        .pred-value { 
+            font-size: 5rem; 
+            font-weight: 700; 
+            color: #fbbf24; 
+            margin: 5px 0;
+            text-shadow: 0 0 20px rgba(251, 191, 36, 0.3);
+        }
+    </style>
+</head>
+<body>
+
+<div class="main-container">
+    <div class="header">
+        <h1>ASL Recognition AI</h1>
+        <p>Professional Sign Language Interpreter</p>
+    </div>
+
+    <div class="content-grid">
+        <div class="preview-area">
+            <img src="" id="imagePreview" alt="Hand Sign Preview">
+            <div class="placeholder-text" id="placeholder">
+                <svg width="50" height="50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                </svg>
+                <p>Select Image to Preview</p>
+            </div>
+        </div>
+
+        <div class="controls">
+            <label for="imageInput" class="btn-upload">Choose Image</label>
+            <input type="file" id="imageInput" accept="image/*">
+            
+            <button class="btn-predict" onclick="predict()">Analyze Sign</button>
+
+            <div class="result-card">
+                <div class="pred-label">Result</div>
+                <div class="pred-value" id="prediction">?</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const imageInput = document.getElementById('imageInput');
+    const imagePreview = document.getElementById('imagePreview');
+    const placeholder = document.getElementById('placeholder');
+
+    imageInput.onchange = evt => {
+        const [file] = imageInput.files;
+        if (file) {
+            imagePreview.src = URL.createObjectURL(file);
+            imagePreview.style.display = 'block';
+            placeholder.style.display = 'none';
+        }
+    }
+
+    async function predict() {
+        const fileInput = document.getElementById("imageInput");
+        const predDiv = document.getElementById("prediction");
+
+        if (fileInput.files.length === 0) {
+            alert("Pehle image select karein!");
+            return;
+        }
+
+        predDiv.innerHTML = "...";
+        predDiv.style.fontSize = "2rem";
+
+        let formData = new FormData();
+        formData.append("image", fileInput.files[0]);
+
+        try {
+            const response = await fetch("/predict", { method: "POST", body: formData });
+            const data = await response.json();
+
+            if (data.error) {
+                predDiv.innerHTML = "!";
+                alert(data.error);
+            } else {
+                predDiv.style.fontSize = "5rem";
+                predDiv.innerHTML = data.prediction;
+            }
+        } catch (err) {
+            predDiv.innerHTML = "!";
+            console.error(err);
+        }
+    }
+</script>
+
+</body>
+</html>
