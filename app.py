@@ -6,15 +6,14 @@ from flask import Flask, render_template, request, jsonify
 
 app = Flask(__name__)
 
-
+# ----- Constants -----#
 IMG_SIZE = 96 
-MODEL_PATH = "asl_model.h5"
+MODEL_PATH = "asl_best_model.keras"
 
 
 model = None
 if os.path.exists(MODEL_PATH):
     try:
-        # Naya TensorFlow/Keras khud hi DTypePolicy handle kar lega
         model = tf.keras.models.load_model(MODEL_PATH)
         print("✅ Success: Latest TensorFlow Loaded the Model!")
     except Exception as e:
@@ -24,8 +23,7 @@ else:
 
 
 labels_list = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 
-               'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z',
-               'del', 'nothing', 'space']
+               'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z']
 
 def preprocess_image(img):
     img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
